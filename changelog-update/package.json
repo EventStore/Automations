@@ -1,0 +1,17 @@
+{
+  "name": "changelog-update",
+  "version": "1.0.0",
+  "description": "Update CHANGELOG on pull request merge.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yorick Laupa",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@actions/github": "^2.1.1",
+    "@octokit/rest": "^17.1.0",
+    "js-base64": "^2.5.2"
+  }
+}
