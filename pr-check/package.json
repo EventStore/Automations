@@ -1,0 +1,16 @@
+{
+  "name": "pr-check",
+  "version": "1.0.0",
+  "description": "Checks if a pull request description meets a set of requirements.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Yorick Laupa",
+  "license": "ISC",
+  "dependencies": {
+    "@actions/core": "^1.2.3",
+    "@actions/github": "^2.1.1",
+    "@octokit/rest": "^17.1.1"
+  }
+}
