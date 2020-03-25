@@ -8,7 +8,9 @@ const sections =
   [ 'Added'
   , 'Fixed'
   , 'Removed'
-  , 'Updated'
+  , 'Changed'
+  , 'Deprecated'
+  , 'Security'
   ];
 
 function tokenizeChangelog(string) {
