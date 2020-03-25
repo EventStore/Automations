@@ -33,7 +33,7 @@ function tokenizeChanges(changesString) {
 // Added: Implement an amazing feature.
 function tokenizeChangelog(string) {
   const colonIdx = string.indexOf(':');
-  const section = string.substring(0, colonIdx);
+  const section = string.substring(0, colonIdx).trim();
   const message = string.substring(colonIdx + 1).trim();
 
   return {
@@ -42,49 +42,83 @@ function tokenizeChangelog(string) {
   };
 }
 
-// Given a text and a section name, returns a record comprised of
-// the beginning of a section and where it ends. If a section is named Foo for example,
-// its starting point would be where we can locate `### Foo`. The section's end would be
-// when we find a double linebreak. It returns `null` if the section doesn't exist.
-function findSection(content, section) {
-  const start = content.indexOf(`### ${section}`);
+// Looks for a 'big' part in the changelog. If you pass the name 'Unreleased', that
+// function will look for the '## [Unreleased]' 'big' part.
+function findBigPart(content, name) {
+  const qualifiedName = `## [${name}]`;
+  const start = content.indexOf(qualifiedName);
 
   if (start === -1)
     return null;
 
-  const end = content.indexOf('\n\n', start);
+  var end = content.indexOf('## [', start + qualifiedName.length);
+
+  if (end === -1)
+    end = content.length - 1;
 
   return {
+    name,
+    start,
+    end,
+  };
+}
+
+// Given a text and a section name, returns a record comprised of
+// the beginning of a section and where it ends. If a section is named Foo for example,
+// its starting point would be where we can locate `### Foo`. The section's end would be
+// when we find a double linebreak. It returns `null` if the section doesn't exist.
+function findSection(part, content, name) {
+  const qualifiedName = `### ${name}`;
+  const start = content.indexOf(qualifiedName, part.start);
+
+  if (start === -1 || start > part.end)
+    return null;
+
+  var end = content.indexOf('\n\n', start + qualifiedName.length);
+
+  if (end === -1 || end > part.end)
+    end = part.end
+
+  return {
+    name,
     start,
     end,
   };
 }
 
 function createSection(sectionName) {
-  return `### ${sectionName}\n\n`;
+  return `### ${sectionName}`;
 }
 
 // Given a previous changelog text and a change list, returns a new changelog with all
 // changes assigned to their sections.
-function applyChangelog(changelog, changes) {
-  return changes.reduce((content, change) => {
+function applyChangelog(part, content, changes) {
+  changes.forEach(change => {
     const token = tokenizeChangelog(change);
-    var section = findSection(content, token.section);
+    var section = findSection(part, content, token.section);
+    var textToInsert = "";
 
     if (section == null) {
-      content = `${content}${createSection(token.section)}`;
-      section = findSection(content, token.section);
+      content = insertTextAt(content, `${createSection(token.section)}`, part);
+      part = findBigPart(content, part.name);
+      section = findSection(part, content, token.section);
+      textToInsert = `\n- ${token.message}\n\n`;
+    } else {
+      textToInsert = `\n- ${token.message}`;
     }
 
-    return insertChangelogInSection(content, token.message, section);
-  }, changelog);
+    content = insertTextAt(content, textToInsert, section);
+    part = findBigPart(content, part.name);
+  });
+
+  return content;
 }
 
-// Inserts a changelog in the right section of a previous changelog text.
-function insertChangelogInSection(content, changelog, section) {
+// Inserts a text in the right section of a previous changelog text.
+function insertTextAt(content, text, section) {
   var tmp = [
     content.slice(0, section.end),
-    `\n- ${changelog}`,
+    text,
     content.slice(section.end)
   ];
 
@@ -107,7 +141,9 @@ function getChangelogContent(previousChangelog, payload) {
     return `${line} [${repo}#${number}](${link})`;
   });
 
-  return applyChangelog(previousChangelog, changes);
+  const unreleasedPart = findBigPart(previousChangelog, 'Unreleased');
+
+  return applyChangelog(unreleasedPart, previousChangelog, changes);
 }
 
 /// When there is no changelog, we create a new one with this text.
@@ -126,9 +162,6 @@ async function run() {
   try {
     const changelogFile = 'CHANGELOG.md';
     const payload = github.context.payload;
-    const stringified = JSON.stringify(payload, undefined, 2);
-
-    console.log(stringified);
 
     if (isSupportedGitHubObject(payload)) {
       const auth = core.getInput('github-token');
