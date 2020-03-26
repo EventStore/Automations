@@ -88,30 +88,13 @@ function lintDescription(env, content) {
 }
 
 async function fetchChangedFiles(env) {
-  const response = await env.octokit.pulls.listCommits({
+  const response = await env.octokit.pulls.listFiles({
     owner: env.owner,
     repo: env.repo,
     pull_number: env.pull_number,
   });
 
-  var paths = [];
-
-  for (const idx in response.data) {
-    const commit = response.data[idx].commit;
-    const tree_sha = commit.tree.sha;
-
-    const treeResponse = await env.octokit.git.getTree({
-      owner: env.owner,
-      repo: env.repo,
-      tree_sha,
-    });
-
-    treeResponse.data.tree.forEach(change => {
-      paths.push(change.path);
-    });
-  }
-
-  return paths;
+  return response.data.map(file => file.filename);
 }
 
 async function run() {
@@ -142,6 +125,9 @@ async function run() {
 
       if (doLinting) {
         await lintDescription(env, description);
+        core.setOutput("skipped", "false");
+      } else {
+        core.setOutput("skipped", "true");
       }
     } else {
       core.setFailed(`pr-check only supports pull_request objects.`);

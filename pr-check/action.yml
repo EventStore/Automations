@@ -8,6 +8,9 @@ inputs:
   source-path:
     description: 'Path where the source code is located. If set, will only enforce proper linting if a change targets that path.'
     required: false
+outputs:
+  skipped:
+    description: 'If true, means the pull request linting process has been skipped (thus no changelog update is needed)'
 runs:
   using: 'node12'
   main: 'index.js'
