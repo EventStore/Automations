@@ -86,6 +86,34 @@ function lintDescription(env, content) {
 
   reportValidationStatus(env, state);
 }
+
+async function fetchChangedFiles(env) {
+  const response = await env.octokit.pulls.listCommits({
+    owner: env.owner,
+    repo: env.repo,
+    pull_number: env.pull_number,
+  });
+
+  var paths = [];
+
+  for (const idx in response.data) {
+    const commit = response.data[idx].commit;
+    const tree_sha = commit.tree.sha;
+
+    const treeResponse = await env.octokit.git.getTree({
+      owner: env.owner,
+      repo: env.repo,
+      tree_sha,
+    });
+
+    treeResponse.data.tree.forEach(change => {
+      paths.push(change.path);
+    });
+  }
+
+  return paths;
+}
+
 async function run() {
   try {
     const payload = github.context.payload;
@@ -102,7 +130,19 @@ async function run() {
         }),
       };
 
-      await lintDescription(env, description);
+      var doLinting = true;
+      const sourcePath = core.getInput('source-path');
+
+      if (sourcePath != null) {
+        const paths = await fetchChangedFiles(env);
+
+        // If there is no change that targets 'sourcePath' path, we skip linting.
+        doLinting = paths.some(path => path.startsWith(sourcePath))
+      }
+
+      if (doLinting) {
+        await lintDescription(env, description);
+      }
     } else {
       core.setFailed(`pr-check only supports pull_request objects.`);
     }
