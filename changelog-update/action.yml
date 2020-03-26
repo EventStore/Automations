@@ -4,6 +4,9 @@ inputs:
   github-token:
     description: 'GitHub token with read and write access on the project.'
     required: true
+  skipped:
+    description: 'Indicates if the pull request linting phase has been skipped. If it true, it means no changelog update is needed. (default: false)'
+    required: false
 runs:
   using: 'node12'
   main: 'index.js'

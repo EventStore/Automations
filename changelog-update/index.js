@@ -162,6 +162,10 @@ async function run() {
   try {
     const changelogFile = 'CHANGELOG.md';
     const payload = github.context.payload;
+    const skipped = core.getInput('skipped') || 'false';
+
+    if (skipped === 'true')
+      return;
 
     if (isSupportedGitHubObject(payload)) {
       const auth = core.getInput('github-token');
