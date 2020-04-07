@@ -1,0 +1,19 @@
+name: 'Event Store release'
+description: 'Lookup or Create a release on Github'
+inputs:
+  github-token:
+    description: 'GitHub token with read and write access on the EventStore organization.'
+    required: true
+  build-type:
+    description: 'Type of release. It could be nightly, beta or stable'
+    required: true
+outputs:
+  version:
+    description: 'A version name, like 2020-04-01-nightly'
+  release_id:
+    description: 'A GitHub release id'
+  upload_url:
+    description: 'URL used to upload release asset to GitHub'
+runs:
+  using: 'node12'
+  main: 'index.js'
