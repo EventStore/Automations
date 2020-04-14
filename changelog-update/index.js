@@ -164,6 +164,8 @@ async function run() {
     const payload = github.context.payload;
     const skipped = core.getInput('skipped') || 'false';
 
+    core.debug(JSON.stringify(github.context, undefined, 4));
+
     if (skipped === 'true')
       return;
 
@@ -247,7 +249,7 @@ async function run() {
       core.setFailed(`changelog-update only supports pull requests.`);
     }
   } catch (error) {
-    core.setFailed(`An unexpected error happened: ${error.message}`);
+    core.setFailed(`An unexpected error happened: ${JSON.stringify(error, undefined, 4)}`);
   }
 }
 
