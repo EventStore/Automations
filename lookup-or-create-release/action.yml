@@ -7,6 +7,12 @@ inputs:
   build-type:
     description: 'Type of release. It could be nightly, beta or stable'
     required: true
+  owner:
+    description: 'Target GitHub owner. Default is the current repo owner'
+    required: false
+  repo:
+    description: 'Target GitHub repo. Default is the current repo'
+    required: false
 outputs:
   version:
     description: 'A version name, like 2020-04-01-nightly'

@@ -26,7 +26,8 @@ const getVersionString = () => {
 };
 
 const getReleaseId = async (release_name) => {
-    const {owner, repo} = github.context.repo;
+    const owner = core.getInput("owner") || github.context.repo.owner;
+    const repo = core.getInput("repo") || github.context.repo.repo;
     const build_type = core.getInput("build-type").toLocaleLowerCase();
 
     try {
