@@ -7,6 +7,12 @@ inputs:
   skipped:
     description: 'Indicates if the pull request linting phase has been skipped. If it true, it means no changelog update is needed. (default: false)'
     required: false
+  mode:
+    description: 'How we update the changelog. [on-spot,batch], [default: on-spot]'
+    required: false
+  repo:
+    description: 'Target repo. By default, current repo'
+    required: false
 runs:
   using: 'node12'
   main: 'index.js'
