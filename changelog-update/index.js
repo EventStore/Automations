@@ -225,6 +225,19 @@ const getCurrentChangelogText = async (owner, repo) => {
   }
 };
 
+const validPullRequest = (pull) => {
+  const changes = tokenizeChanges(pull.body.replace(/\r\n/g, '\n'));
+
+  return changes.every(line => {
+    if (line.trim() === "")
+      return false;
+
+    const token = tokenizeChangelog(line);
+
+    return token.section !== "" && token.message !== "";
+  });
+};
+
 async function run() {
   try {
     const payload = github.context.payload;
@@ -277,17 +290,25 @@ async function run() {
       offset.setUTCDate(offset.getUTCDate() - 1);
 
       let pulls = await fetchPullRequestsOfTheDay(offset);
-      let input = pulls.map(pull => {
-        return {
+      let input = pulls.flatMap(pull => {
+        // Because it is possible for a pull request check to be skipped by `pr-check` action (for example, if the PR
+        // doesn’t change anything under `src` directory), we got to filter those skipped pull requests out in batch
+        // mode.
+        if (!validPullRequest(pull)) {
+          core.info(`Pull request #${pull.number} was skipped`);
+          return [];
+        }
+
+        return [{
           repo,
           title: pull.title,
           link: pull._links.html.href,
           number: pull.number,
           body: pull.body,
-        };
+        }];
       });
 
-      if (pulls.length === 0) {
+      if (input.length === 0) {
         core.info(`No pull request found for ${offset.getUTCFullYear()}-${offset.getUTCMonth()}-${offset.getUTCDate()} day`);
         return;
       }
