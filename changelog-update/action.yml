@@ -11,7 +11,10 @@ inputs:
     description: 'How we update the changelog. [on-spot,batch], [default: on-spot]'
     required: false
   repo:
-    description: 'Target repo. By default, current repo'
+    description: 'Target repo. By default, current repo but mandatory in batch mode'
+    required: false
+  owner:
+    description: "Owner of the target repo. By default, current repo owner but mandatory in batch mode"
     required: false
 runs:
   using: 'node12'

@@ -166,15 +166,15 @@ const belongsToSameDay = (refDate, targetDate) => {
   return refDate.getUTCDate() === targetDate.getUTCDate() && refDate.getUTCFullYear() === targetDate.getUTCFullYear() && refDate.getUTCMonth() === targetDate.getUTCMonth();
 };
 
-const fetchPullRequestsOfTheDay = async (offset) => {
+const fetchPullRequestsOfTheDay = async (owner, repo, offset) => {
   let page = 1;
   let targetedPulls = [];
   let lastUpdateDate = null;
 
   while (true) {
     const response = await octokit.pulls.list({
-      owner: "EventStore",
-      repo: "EventStore",
+      owner,
+      repo,
       state: "closed",
       base: "master",
       sort: "updated",
@@ -242,12 +242,15 @@ async function run() {
   try {
     const payload = github.context.payload;
     const skipped = core.getInput('skipped') || 'false';
-    const owner = payload.repository.owner.login;
+    const owner = core.getInput("owner") || payload.repository.owner.login;
     const repo = core.getInput("repo") || payload.repository.name;
+
+    core.debug(`Skipped: [${skipped}], Owner: [${owner}], Repo: [${repo}], Mode: [${mode}]`);
 
     if (skipped === 'true')
       return;
 
+    core.debug("Before validation…");
     // Mode validation.
     if (mode === onSpotMode) {
       if (!isSupportedGitHubObject(payload))
@@ -257,11 +260,15 @@ async function run() {
         core.setFailed("changelog-update requires a merged pull request on on-spot mode.");
     }
     // End validation.
-
+    core.debug("Complete…");
+    core.debug("Before getCurrentChangelogText…");
     let changelog = await getCurrentChangelogText(owner, repo);
+    core.debug("Complete");
 
-    if (!changelog)
+    if (!changelog) {
       changelog = initChangelog();
+      core.debug("CHANGELOG.md doesn’t exist. Created.");
+    }
 
     let content = null;
     let base_tree = null;
@@ -289,7 +296,10 @@ async function run() {
       let offset = new Date();
       offset.setUTCDate(offset.getUTCDate() - 1);
 
-      let pulls = await fetchPullRequestsOfTheDay(offset);
+      core.debug("Before fetchPullRequestsOfTheDay…");
+      let pulls = await fetchPullRequestsOfTheDay(owner, repo, offset);
+      core.debug("Completed");
+      core.debug("Gathering pull requests…");
       let input = pulls.flatMap(pull => {
         // Because it is possible for a pull request check to be skipped by `pr-check` action (for example, if the PR
         // doesn’t change anything under `src` directory), we got to filter those skipped pull requests out in batch
@@ -307,6 +317,7 @@ async function run() {
           body: pull.body,
         }];
       });
+      core.debug("Completed");
 
       if (input.length === 0) {
         core.info(`No pull request found for ${offset.getUTCFullYear()}-${offset.getUTCMonth()}-${offset.getUTCDate()} day`);
