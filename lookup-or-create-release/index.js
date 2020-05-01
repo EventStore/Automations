@@ -22,7 +22,7 @@ const getVersionString = () => {
         core.setFailed("Beta build not implemented yet!");
     }
 
-    core.setFailed(`Unsupported build type [${type}]`);
+    return type;
 };
 
 const getReleaseId = async (release_name) => {
