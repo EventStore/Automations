@@ -272,6 +272,7 @@ async function run() {
 
     let content = null;
     let base_tree = null;
+    let commit_sha = null;
 
     if (mode === onSpotMode) {
       const params = {
@@ -284,7 +285,7 @@ async function run() {
 
       content = getChangelogContent(changelog, params);
 
-      const commit_sha = payload.pull_request.merge_commit_sha;
+      commit_sha = payload.pull_request.merge_commit_sha;
       const response = await octokit.git.getCommit({
         owner,
         repo,
@@ -324,25 +325,30 @@ async function run() {
         return;
       }
 
+      core.debug("Batch mode: folding pull requests into a changelog…");
       content = input.reduce(getChangelogContent, changelog);
+      core.debug("Completed");
+      core.debug("Batch mode: get master ref…");
       let response = await octokit.git.getRef({
         owner,
         repo,
         ref: 'heads/master',
       });
-
-      let commit_sha = response.data.object.sha;
+      core.debug("Completed");
+      core.debug("Batch mode: get master ref commit…");
+      commit_sha = response.data.object.sha;
       response = await octokit.git.getCommit({
         owner,
         repo,
         commit_sha
       });
-
       base_tree = response.data.tree.sha;
+      core.debug("Completed");
     } else {
       core.setFailed(`Unsupported mode: ${mode}`);
     }
 
+    core.debug("Create a new git tree…");
     const treeResponse = await octokit.git.createTree({
       owner,
       repo,
@@ -358,6 +364,8 @@ async function run() {
     });
 
     const newTreeSha = treeResponse.data.sha;
+    core.debug("Completed");
+    core.debug("Create commit…");
     const createCommitResponse = await octokit.git.createCommit({
       owner,
       repo,
@@ -367,13 +375,16 @@ async function run() {
     });
 
     const newCommitSha = createCommitResponse.data.sha;
+    core.debug("Completed");
 
+    core.debug("Update master ref…");
     await octokit.git.updateRef({
       owner,
       repo,
       ref: 'heads/master',
       sha: newCommitSha
     });
+    core.debug("Completed");
   } catch (error) {
     core.setFailed(`An unexpected error happened: ${JSON.stringify(error, undefined, 4)}`);
   }
