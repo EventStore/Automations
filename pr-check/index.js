@@ -102,15 +102,12 @@ async function run() {
     const payload = github.context.payload;
 
     if (payload.hasOwnProperty('pull_request')) {
-      const projectName = payload.repository.name;
       const description = payload.pull_request.body.replace(/\r\n/g, '\n');
       const env = {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         pull_number: payload.pull_request.number,
-        octokit: new Octokit({
-          auth: core.getInput('github-token')
-        }),
+        octokit: new Octokit(),
       };
 
       var doLinting = true;
