@@ -2,7 +2,13 @@ name: 'Pull request check'
 description: 'Checks if a pull request meets a set of requirements.'
 inputs:
   source-path:
-    description: 'Path where the source code is located. If set, will only enforce proper linting if a change targets that path.'
+    description: 'Path where the source code is located. If set, will only enforce proper linting if a change targets that path. DEPRECATED: use include parameter instead'
+    required: false
+  include:
+    description: 'If set, will only check pull request that edit files under specified paths.'
+    required: false
+  exclude:
+    description: 'If set, will not check pull request that edit files under specified path'
     required: false
 outputs:
   skipped:

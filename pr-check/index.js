@@ -70,7 +70,7 @@ async function reportValidationStatus(env, state) {
   }
 }
 
-function lintDescription(env, content) {
+async function lintDescription(env, content) {
   var state = initValidationState();
   const changes = tokenizeChanges(content);
 
@@ -84,7 +84,7 @@ function lintDescription(env, content) {
     });
   }
 
-  reportValidationStatus(env, state);
+  await reportValidationStatus(env, state);
 }
 
 async function fetchChangedFiles(env) {
@@ -97,9 +97,51 @@ async function fetchChangedFiles(env) {
   return response.data.map(file => file.filename);
 }
 
+const parseStringOrStringList = (json) => {
+  if (!json)
+    return [];
+
+  if (!json.includes('"') || !json.includes("'") || !json.includes(']') || !json.includes('['))
+    return [json];
+
+  let result = null;
+
+  try {
+    result = JSON.parse(json);
+
+    const type = typeof result;
+
+    if (type !== "string" && type !== "object") // hard to know if it is a list but whatever.
+      core.setFailed(`Not supported type: ${type}`);
+
+    if (type === "string")
+      return [result];
+
+    return result;
+  } catch (e) {
+    core.setFailed(`Failed to parse JSON: ${e}`);
+  }
+};
+
+const isCandidateToLinting = (includes, excludes) => {
+  return (path) => {
+    const isTarget = includes.length !== 0 ? includes.some(target => path.startsWith(target)) : true;
+    const isExcluded = excludes.length !== 0 ? excludes.some(target => path.startsWith(target)) : false;
+
+    return isTarget && !isExcluded;
+  };
+};
+
 async function run() {
   try {
     const payload = github.context.payload;
+    const includeParams = core.getInput("include") || core.getInput("source-path") || null;
+    const excludeParams = core.getInput("exclude") || null;
+    core.debug("Parse include parameter…");
+    const includeList = parseStringOrStringList(includeParams);
+    core.debug("Parse exclude parameter…");
+    const excludeList = parseStringOrStringList(excludeParams);
+    core.debug("Complete");
 
     if (payload.hasOwnProperty('pull_request')) {
       const description = payload.pull_request.body.replace(/\r\n/g, '\n');
@@ -110,15 +152,8 @@ async function run() {
         octokit: new Octokit(),
       };
 
-      var doLinting = true;
-      const sourcePath = core.getInput('source-path');
-
-      if (sourcePath != null) {
-        const paths = await fetchChangedFiles(env);
-
-        // If there is no change that targets 'sourcePath' path, we skip linting.
-        doLinting = paths.some(path => path.startsWith(sourcePath))
-      }
+      const paths = await fetchChangedFiles(env);
+      const doLinting = paths.some(isCandidateToLinting(includeList, excludeList));
 
       if (doLinting) {
         await lintDescription(env, description);
