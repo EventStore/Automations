@@ -14,6 +14,15 @@ const getVersionString = () => {
         return `${date.toISOString().split('T', 1)[0]}-${type}`;
     }
 
+    if (type == 'release') {
+        const version = core.getInput("version").toLocaleLowerCase();
+        if (!version) {
+            core.setFailed("Release build requires a version to be specified!");
+        } else {
+            return version;
+        }
+    }
+
     if (type === 'stable') {
         core.setFailed("Stable build not implemented yet!");
     }
