@@ -41,9 +41,12 @@ const getReleaseId = async (release_name) => {
 
     try {
         let prerelease = true;
-
         if (build_type === 'stable')
             prerelease = false;
+
+        let draft = false;
+        if (build_type === 'release')
+            draft = true;
 
         const response = await octokit.repos.createRelease({
             owner,
@@ -51,6 +54,7 @@ const getReleaseId = async (release_name) => {
             tag_name: release_name,
             prerelease,
             name: release_name,
+            draft: draft
         });
 
         return {
