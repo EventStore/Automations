@@ -1,0 +1,5 @@
+name: 'Create Version Label'
+description: 'Create a version label following that format YY.MM'
+runs:
+  using: 'node12'
+  main: 'index.js'
