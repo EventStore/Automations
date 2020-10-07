@@ -13,6 +13,12 @@ inputs:
   repo:
     description: 'Target GitHub repo. Default is the current repo'
     required: false
+  version:
+    description: 'The version to release. This is required for a stable release.'
+    required: false
+  iteration:
+    description: 'The package iteration. This is appended to the version. e.g: {version}-{iteration}'
+    required: false
 outputs:
   version:
     description: 'A version name, like 2020-04-01-nightly'

@@ -16,9 +16,13 @@ const getVersionString = () => {
 
     if (type == 'release') {
         const version = core.getInput("version").toLocaleLowerCase();
+        const iteration = core.getInput("iteration").toLocaleLowerCase();
         if (!version) {
             core.setFailed("Release build requires a version to be specified!");
         } else {
+            if (iteration) {
+                return version + "-" + iteration;
+            }
             return version;
         }
     }
