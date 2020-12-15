@@ -1,5 +1,9 @@
 name: 'Create Version Label'
 description: 'Create a version label following that format YY.MM'
+inputs:
+  type:
+    description: 'Type of version label you want: current supported values [tag]'
+    required: false
 runs:
   using: 'node12'
   main: 'index.js'

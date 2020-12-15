@@ -1,14 +1,27 @@
 const core = require('@actions/core');
+const github = require('@actions/github');
 
-const date = new Date();
-const yearString = `${date.getFullYear()}`.substr(2);
-const month = date.getMonth() + 1;
-let monthStr;
+let type = core.getInput("type");
+var version = "";
 
-if (month < 10)
-    monthStr = `0${month}`;
-else
-    monthStr = `${month}`;
+switch (type) {
+    case 'tag':
+        version = github.context.ref.substr(10);
+        break;
+    default:
+        const date = new Date();
+        const yearString = `${date.getFullYear()}`.substr(2);
+        const month = date.getMonth() + 1;
+        let monthStr;
 
+        if (month < 10)
+            monthStr = `0${month}`;
+        else
+            monthStr = `${month}`;
 
-core.setOutput("version", `${yearString}.${monthStr}`);
+        version = `${yearString}.${monthStr}`;
+
+        break;
+}
+
+core.setOutput("version", version);
