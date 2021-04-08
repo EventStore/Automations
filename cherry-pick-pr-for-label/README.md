@@ -2,7 +2,7 @@
 
 Action aim is to help to synchronise changes between multiple branches. You can use it to copy changes to the different release branches automatically, e.g. update the documentation changes for various database versions.
 
-Action cherry-picks the commits from merged PR. Cherry-pick is done based on the labels(_**Note**: labels can be set only by repository contributors._). If merged PR has the labels with format `cherry-pick:{target_branch}` (e.g. `cherry_pick:release/oss-v20.10`) then for each label it will create the follow up pull request. It will do that doing following steps:
+Action cherry-picks the commits from merged PR. Cherry-pick is done based on the labels(_**Note**: labels can be set only by repository contributors._). If merged PR has the labels with format `cherry-pick:{target_branch}` (e.g. `cherry-pick:release/oss-v20.10`) then for each label it will create the follow up pull request. It will do that doing following steps:
 
 1. Create a new branch with the format `cherry-pick/${pull_request_number}/${pull_request_source_branch}-${target_branch}` (e.g. `cherry-pick/16/docs_update-release/oss-v20.10`). Parameter `target_branch` will be taken from the label suffix. If a branch already exists, it will be reused (no new branch will be created).
 2. Cherry-pick commits from the pull request to the newly created branch. If the action was run multiple times (e.g. someone closed and reopened a pull request), cherry-pick would be made more than once.
