@@ -19,7 +19,6 @@ on:
     types: [closed]
 jobs:
   cherry_pick:
-    if: github.event.pull_request.merged == 'true'
     name: Cherry Pick PR for label
     runs-on: ubuntu-latest
     steps:

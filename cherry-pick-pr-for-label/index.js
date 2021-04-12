@@ -124,6 +124,11 @@ async function run() {
       return;
     }
 
+    if (pullRequest.merged !== true) {
+      console.log(`Skipping: PR was not merged.`);
+      return;
+    }
+
     let anyCherryPickFailed = false;
 
     for (const targetBranch of targetBranches) {
