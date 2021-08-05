@@ -303,6 +303,7 @@ async function run() {
       core.debug("Gathering pull requests…");
       let input = pulls.flatMap(pull => {
         core.debug(`>>>Dealing with #${pull.number}`);
+        core.debug(`${JSON.stringify(pull)}`);
         // Because it is possible for a pull request check to be skipped by `pr-check` action (for example, if the PR
         // doesn’t change anything under `src` directory), we got to filter those skipped pull requests out in batch
         // mode.
@@ -311,7 +312,6 @@ async function run() {
           return [];
         }
 
-        core.debug("<<<");
         return [{
           repo,
           title: pull.title,
