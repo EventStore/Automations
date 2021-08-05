@@ -26,6 +26,9 @@ function tokenizeChanges(changesString) {
   const end = changesString.indexOf('\n\n');
   let target;
 
+  core.debug(`>>> ChangesString: ${changesString}`);
+  core.debug(`>>> end: ${end}`);
+
   if (end === -1) {
     target = changesString;
   } else {
@@ -228,11 +231,17 @@ const getCurrentChangelogText = async (owner, repo) => {
 const validPullRequest = (pull) => {
   const changes = tokenizeChanges(pull.body.replace(/\r\n/g, '\n'));
 
+  core.debug(`>>> Changes: ${changes}`);
+
   return changes.every(line => {
     if (line.trim() === "")
       return false;
 
+    core.debug(`>>> Line: ${line}`);
+
     const token = tokenizeChangelog(line);
+
+    core.debug(`>>> Token: ${JSON.stringify(token)}`);
 
     return token.section !== "" && token.message !== "";
   });
@@ -303,7 +312,7 @@ async function run() {
       core.debug("Gathering pull requests…");
       let input = pulls.flatMap(pull => {
         core.debug(`>>>Dealing with #${pull.number}`);
-        core.debug(`${JSON.stringify(pull)}`);
+        core.debug(`${JSON.stringify(pull, null, 4)}`);
         // Because it is possible for a pull request check to be skipped by `pr-check` action (for example, if the PR
         // doesn’t change anything under `src` directory), we got to filter those skipped pull requests out in batch
         // mode.
