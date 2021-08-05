@@ -229,6 +229,9 @@ const getCurrentChangelogText = async (owner, repo) => {
 };
 
 const validPullRequest = (pull) => {
+  if (pull.body == null)
+    return false;
+
   const changes = tokenizeChanges(pull.body.replace(/\r\n/g, '\n'));
 
   core.debug(`>>> Changes: ${changes}`);
