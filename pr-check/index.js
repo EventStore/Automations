@@ -125,8 +125,8 @@ const parseStringOrStringList = (json) => {
 
 const isCandidateToLinting = (includes, excludes) => {
   return (path) => {
-    const isTarget = includes.length !== 0 ? includes.some(target => path.startsWith(target)) : true;
-    const isExcluded = excludes.length !== 0 ? excludes.some(target => path.startsWith(target)) : false;
+    const isTarget = includes.length !== 0 ? includes.some(target => path.match(new RegExp(target))) : true;
+    const isExcluded = excludes.length !== 0 ? excludes.some(target => path.match(new RegExp(target))) : false;
 
     return isTarget && !isExcluded;
   };
