@@ -1,0 +1,18 @@
+{
+	"name": "bulk-add-issues-to-project",
+	"version": "1.0.0",
+	"description": "Adds all issues in a repo to a Github Beta Project",
+	"main": "index.js",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"dependencies": {
+		"@actions/core": "^1.6.0",
+		"@actions/github": "^5.0.0",
+		"@octokit/graphql": "^4.8.0",
+		"graphql": "^16.2.0"
+	}
+}
