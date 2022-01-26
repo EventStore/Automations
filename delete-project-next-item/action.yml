@@ -1,0 +1,22 @@
+name: "Remove items from a Github beta project"
+description: "Automation to remove items from Github beta projects"
+inputs:
+  github-token:
+    description: "Github Access Token with org:write permission"
+    required: true
+    default: ""
+  organization:
+    description: "Organization for the project"
+    required: true
+    default: ""
+  project-number:
+    description: "The Project Number from the project's url"
+    required: true
+    default: ""
+  resource-node-id:
+    description: "The global node ID of the issue or PR"
+    required: true
+    default: ""
+runs:
+  using: "node12"
+  main: "index.js"
