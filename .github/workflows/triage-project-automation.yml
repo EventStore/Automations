@@ -3,10 +3,6 @@ name: EventStore Triage Project Automations Workflow
 on:
   workflow_call:
     inputs:
-      project-number:
-        required: true
-        description: The project number from the project's url
-        type: number
       resource-node-id:
         required: true
         description: The node id of the issue or PR to act upon
@@ -23,7 +19,12 @@ on:
       token:
         required: true
         description: The token to use. It must have org:write access
+      project-number:
+        required: true
+        description: The project number from the project's url
 
+env:
+  PROJECT_NUMBER: ${{ secrets.project-number }}
 jobs:
   item-milestoned:
     name: Remove milestoned item
@@ -35,7 +36,7 @@ jobs:
         with:
           github-token: ${{ secrets.token }}
           organization: EventStore
-          project-number: ${{ inputs.project-number }}
+          project-number: ${{ env.PROJECT_NUMBER }}
           resource-node-id: ${{ inputs.resource-node-id }}
   item-added:
     name: Add item to board
@@ -46,6 +47,6 @@ jobs:
         with:
           gh_token: ${{ secrets.token }}
           organization: EventStore
-          project_id: ${{ inputs.project-number }}
+          project_id: ${{ env.PROJECT_NUMBER }}
           resource_node_id: ${{ inputs.resource-node-id }}
           status_value: "To Triage"

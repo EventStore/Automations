@@ -2,10 +2,6 @@ name: Development project automations
 on:
   workflow_call:
     inputs:
-      project-number:
-        required: true
-        description: The project number from the project's url
-        type: number
       resource-node-id:
         required: true
         description: The node id of the issue or PR to act upon
@@ -23,9 +19,12 @@ on:
       token:
         required: true
         description: The token to use. It must have org:write access
+      project-number:
+        required: true
+        description: The project number from the project's url
 
 env:
-  PROJECT_ID: ${{ inputs.project-number }}
+  PROJECT_ID: ${{ secrets.project-number }}
 jobs:
   milestone_added_to_issue:
     name: milestone_added_to_issue
