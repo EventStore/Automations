@@ -1,0 +1,6 @@
+name: 'Tag Docker Images'
+description: 'Tag Docker Images according to RFC 2940'
+author: 'EventStore'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
