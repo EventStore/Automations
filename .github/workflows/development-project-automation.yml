@@ -27,7 +27,7 @@ env:
   PROJECT_ID: ${{ secrets.project-number }}
 jobs:
   milestone_added_to_issue:
-    name: milestone_added_to_issue
+    name: 'Milestone Added to Issue'
     runs-on: ubuntu-latest
     if: inputs.event-name == 'issues' && inputs.event-action == 'milestoned'
     steps:
@@ -40,13 +40,13 @@ jobs:
           resource_node_id: ${{ inputs.resource-node-id }}
           status_value: '' # No target status means that it gets added in the default state
   get_pr_status:
-    name: get_pr_status
+    name: 'Get PR Status'
     runs-on: ubuntu-latest
     if: inputs.event-name == 'pull_request' && (
       inputs.event-action == 'opened' || inputs.event-action == 'reopened' ||
       inputs.event-action == 'converted_to_draft' || inputs.event-action == 'ready_for_review')
     steps:
-      - name: "Get PR information"
+      - name: 'Get PR information'
         id: get_pr_info
         env:
           GITHUB_TOKEN: ${{ secrets.token }}
@@ -65,7 +65,7 @@ jobs:
             else
               echo "::set-output name=prStatus::Review/QA"
             fi
-      - name: "Add Pull Request"
+      - name: 'Add Pull Request'
         uses: leonsteinhaeuser/project-beta-automations@v1.0.2
         with:
           gh_token: ${{ secrets.token }}

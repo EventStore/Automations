@@ -41,7 +41,7 @@ jobs:
   item-added:
     name: Add item to board
     runs-on: ubuntu-latest
-    if: inputs.event-action == 'opened' || inputs.event-action == 'reopened' || (inputs.event-action == 'labeled' && contains("triage", inputs.labels))
+    if: inputs.event-action == 'opened' || inputs.event-action == 'reopened' || (inputs.event-action == 'labeled' && contains('triage', inputs.labels))
     steps:
       - uses: leonsteinhaeuser/project-beta-automations@v1.0.2
         with:
