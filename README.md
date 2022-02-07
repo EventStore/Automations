@@ -12,13 +12,13 @@ Items that are given a milestone are removed from the Triage project, and should
 
 | Input                   | Description |
 | ------------------ | ------------- |
-| `project-number`       | The Project Number from the project's url |
 | `resource-node-id` | The global node ID of the issue or PR (`github.event.issue.node_id`) |
 | `event-action` | The action that triggered the workflow (`github.event.action`) |
 | `labels` | A comma-separated list of the labels on the issue (`join(github.event.issue.labels.*.name, ', ')`) |
 
 | Secrets                | Description |
 | ------------------ | ------------- |
+| `project-number`       | The Project Number from the project's url |
 | `token`                | Github Access Token with `org:write` permission |
 
 ### Example calling workflow:
@@ -35,13 +35,13 @@ on:
       - labeled
 jobs:
   call-workflow:
-    uses: EventStore/Automation/.github/workflows/triage-project-automation.yml@master
+    uses: EventStore/Automations/.github/workflows/triage-project-automation.yml@master
     with:
-      project-number: 1
       resource-node-id: ${{ github.event.issue.node_id }}
       event-action: ${{ github.event.action }}
       labels: ${{ join(github.event.issue.labels.*.name, ', ') }}
     secrets:
+      project-number: 1
       token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 ```
 
@@ -57,13 +57,13 @@ If the pull request is converted to draft or set to ready to review, then the st
 
 | Input                   | Description |
 | ------------------ | ------------- |
-| `project-number`       | The Project Number from the project's url |
 | `resource-node-id` | The global node ID of the issue or PR (`github.event.issue.node_id`) |
 | `event-action` | The action that triggered the workflow (`github.event.action`) |
 | `event-name` | The name of the event that triggered the workflow (`github.event_name`) |
 
 | Secrets                | Description |
 | ------------------ | ------------- |
+| `project-number`       | The Project Number from the project's url |
 | `token`                | Github Access Token with `org:write` permission |
 
 ### Example calling workflow:
@@ -81,13 +81,13 @@ on:
 
 jobs:
   call-workflow:
-    uses: EventStore/Automation/.github/workflows/development-project-automation.yml@master
+    uses: EventStore/Automations/.github/workflows/development-project-automation.yml@master
     with:
-      project-number: 2
       resource-node-id: ${{ github.event.pull_request.node_id }}
       event-action: ${{ github.event.action }}
       event-name: ${{ github.event_name }}
     secrets:
+      project-number: 2
       token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 ```
 
@@ -101,12 +101,12 @@ on:
 
 jobs:
   call-workflow:
-    uses: EventStore/Automation/.github/workflows/development-project-automation.yml@master
+    uses: EventStore/Automations/.github/workflows/development-project-automation.yml@master
     with:
-      project-number: 2
       resource-node-id: ${{ github.event.issue.node_id }}
       event-action: ${{ github.event.action }}
       event-name: ${{ github.event_name }}
     secrets:
+      project-number: 2
       token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 ```
