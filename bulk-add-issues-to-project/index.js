@@ -12,7 +12,7 @@ if (!token) {
   return;
 }
 
-const projectNumber = args[1];
+const projectNumber = parseInt(args[1]);
 if (!projectNumber) {
   console.log("The project number is required");
   return;
@@ -26,7 +26,7 @@ if (!repository) {
 
 const organization = args[3] ?? "EventStore";
 
-const pageSize = args[4] ? parseInt(args[4]) : 5;
+const pageSize = args[4] ? parseInt(args[4]) : 100;
 if (!pageSize) {
   console.log("The page size needs to be an Int");
   return;
