@@ -31,7 +31,6 @@ jobs:
     runs-on: ubuntu-latest
     if: inputs.event-action == 'milestoned'
     steps:
-      - uses: actions/checkout@v1
       - uses: EventStore/Automations/delete-project-next-item@master
         with:
           github-token: ${{ secrets.token }}

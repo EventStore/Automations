@@ -3,9 +3,16 @@ const { graphql } = require("@octokit/graphql");
 
 const token =  core.getInput('github-token');
 const organization = core.getInput('organization');
-const projectNumber = core.getInput('project-number');
 const resourceNodeId = core.getInput('resource-node-id');
 
+const projectNumber = parseInt(core.getInput('project-number'));
+
+if (!projectNumber) {
+  var msg = `ProjectNumber '${core.getInput('project-number')}' must be an int.`
+  core.setFailed(msg);
+  console.log(msg);
+  throw msg;
+}
 const graphqlWithAuth = graphql.defaults({
   headers: {
     authorization: `token ${token}`,
