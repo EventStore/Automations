@@ -32,7 +32,7 @@ jobs:
     if: inputs.event-name == 'issues' && inputs.event-action == 'milestoned'
     steps:
       - name: 'Add issue to board'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v1.2.1
         with:
           gh_token: ${{ secrets.token }}
           organization: EventStore
@@ -66,7 +66,7 @@ jobs:
               echo "::set-output name=prStatus::Review/QA"
             fi
       - name: 'Add Pull Request'
-        uses: leonsteinhaeuser/project-beta-automations@v1.0.2
+        uses: leonsteinhaeuser/project-beta-automations@v1.2.1
         with:
           gh_token: ${{ secrets.token }}
           organization: EventStore
