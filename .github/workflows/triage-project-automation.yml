@@ -15,6 +15,11 @@ on:
         required: false
         description: The labels on the item as a comma-separated string
         type: string
+      triage-status:
+        description: The project status to apply to the issue or PR
+        default: "To Triage"
+        required: false
+        type: string
     secrets:
       token:
         required: true
@@ -48,4 +53,4 @@ jobs:
           organization: EventStore
           project_id: ${{ env.PROJECT_NUMBER }}
           resource_node_id: ${{ inputs.resource-node-id }}
-          status_value: "To Triage"
+          status_value: ${{ inputs.triage-status }}
