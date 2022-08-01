@@ -58,15 +58,10 @@ function initValidationState() {
 async function reportValidationStatus(env, state) {
   if (state.errors.length > 0) {
     const message = state.errors.map(line => `- ${line}`).join('\n');
-    const body = `Pull request description doesn't meet requirements:\n\n${message}`;
+    const accepted = sections.map(sect => `- ${sect}:`).join('\n');
+    const body = `Pull request description doesn't meet requirements:\n\n${message}\n\nPlease ensure your PR description starts with one of the following sections, followed by a brief note for the changelog and a newline:\n\n${accepted}`;
 
-    await env.octokit.pulls.createReview({
-      owner: env.owner,
-      repo: env.repo,
-      pull_number: env.pull_number,
-      event: 'REQUEST_CHANGES',
-      body,
-    });
+    core.setFailed(body);
   }
 }
 
