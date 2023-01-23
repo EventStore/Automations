@@ -49,7 +49,7 @@ jobs:
       - name: 'Get PR information'
         id: get_pr_info
         env:
-          GITHUB_TOKEN: ${{ secrets.token }}
+          GH_TOKEN: ${{ secrets.token }}
         run: |
           gh api graphql -f query='
             query($resource: ID!) {
