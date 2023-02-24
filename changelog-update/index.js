@@ -179,7 +179,6 @@ const fetchPullRequestsOfTheDay = async (owner, repo, offset) => {
       owner,
       repo,
       state: "closed",
-      base: "master",
       sort: "updated",
       direction: "desc",
       page,
@@ -201,6 +200,7 @@ const fetchPullRequestsOfTheDay = async (owner, repo, offset) => {
     if (!lastUpdateDate || lastUpdateDate < offset)
       break;
 
+    lastUpdateDate = null;
     page += 1;
   }
 
