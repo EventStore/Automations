@@ -257,6 +257,13 @@ async function run() {
     const owner = core.getInput("owner") || payload.repository.owner.login;
     const repo = core.getInput("repo") || payload.repository.name;
 
+    core.debug(`Get ${owner}/${repo} default branch...`);
+    const default_branch = (await octokit.repos.get({
+      owner,
+      repo
+    })).data.default_branch;
+    core.debug(`Default branch: ${default_branch}`);
+
     core.debug(`Skipped: [${skipped}], Owner: [${owner}], Repo: [${repo}], Mode: [${mode}]`);
 
     if (skipped === 'true')
@@ -342,14 +349,14 @@ async function run() {
       core.debug("Batch mode: folding pull requests into a changelog…");
       content = input.reduce(getChangelogContent, changelog);
       core.debug("Completed");
-      core.debug("Batch mode: get master ref…");
+      core.debug(`Batch mode: get ${default_branch} ref...`);
       let response = await octokit.git.getRef({
         owner,
         repo,
-        ref: 'heads/master',
+        ref: `heads/${default_branch}`,
       });
       core.debug("Completed");
-      core.debug("Batch mode: get master ref commit…");
+      core.debug(`Batch mode: get ${default_branch} ref commit...`);
       commit_sha = response.data.object.sha;
       response = await octokit.git.getCommit({
         owner,
@@ -391,11 +398,11 @@ async function run() {
     const newCommitSha = createCommitResponse.data.sha;
     core.debug("Completed");
 
-    core.debug("Update master ref…");
+    core.debug(`Update ${default_branch} ref...`);
     await octokit.git.updateRef({
       owner,
       repo,
-      ref: 'heads/master',
+      ref: `heads/${default_branch}`,
       sha: newCommitSha
     });
     core.debug("Completed");
