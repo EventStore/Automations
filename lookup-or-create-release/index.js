@@ -9,9 +9,7 @@ const getVersionString = () => {
     const type = core.getInput("build-type").toLocaleLowerCase();
 
     if (type === 'nightly') {
-        const date = new Date();
-
-        return `${date.toISOString().split('T', 1)[0]}-${type}`;
+        return 'nightly';
     }
 
     if (type == 'release') {
@@ -42,6 +40,11 @@ const getReleaseId = async (release_name) => {
     const owner = core.getInput("owner") || github.context.repo.owner;
     const repo = core.getInput("repo") || github.context.repo.repo;
     const build_type = core.getInput("build-type").toLocaleLowerCase();
+
+    // delete previous nightly if there's one
+    if (release_name == 'nightly') {
+        cleanupPreviousNightly();
+    }
 
     try {
         let prerelease = true;
@@ -81,6 +84,31 @@ const getReleaseId = async (release_name) => {
         core.setFailed(`Unexpected error when creating a release: ${JSON.stringify(error, undefined, 4)}`);
     }
 };
+
+const cleanupPreviousNightly = async () => {
+    try {
+        const current = await octokit.repos.getReleaseByTag({
+            owner,
+            repo,
+            tag: 'nightly',
+        });
+
+        await octokit.repos.deleteRelease({
+            owner,
+            repo,
+            release_id: current.data.id,
+        });
+
+        octokit.git.deleteRef({
+            owner,
+            repo,
+            ref: 'nightly',
+        });
+    } catch {
+        // noop
+    }
+}
+
 
 const run = async () => {
     const version = getVersionString();
