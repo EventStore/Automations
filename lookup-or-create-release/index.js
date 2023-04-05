@@ -5,11 +5,14 @@ const octokit = new Octokit({
     auth: core.getInput('github-token'),
 });
 
+const nightlyTagName = 'nightly-build';
+const minNightlyReleaseAge = 1 * 3600 /*hr*/ * 1000 /*milliseconds*/;
+
 const getVersionString = () => {
     const type = core.getInput("build-type").toLocaleLowerCase();
 
     if (type === 'nightly') {
-        return 'nightly';
+        return nightlyTagName;
     }
 
     if (type == 'release') {
@@ -41,9 +44,9 @@ const getReleaseId = async (release_name) => {
     const repo = core.getInput("repo") || github.context.repo.repo;
     const build_type = core.getInput("build-type").toLocaleLowerCase();
 
-    // delete previous nightly if there's one
-    if (release_name == 'nightly') {
-        cleanupPreviousNightly();
+    if (release_name == nightlyTagName) {
+        await cleanupPreviousNightly();
+        await createNightlyTagIfNeeded();
     }
 
     try {
@@ -56,7 +59,7 @@ const getReleaseId = async (release_name) => {
             repo,
             tag_name: release_name,
             prerelease,
-            name: release_name
+            name: release_name,
         });
 
         return {
@@ -86,26 +89,123 @@ const getReleaseId = async (release_name) => {
 };
 
 const cleanupPreviousNightly = async () => {
+    const owner = core.getInput("owner") || github.context.repo.owner;
+    const repo = core.getInput("repo") || github.context.repo.repo;
+
+    console.log("checking nightly releases");
+
+    // get all nightly releases, could be more than one in case of error
+    const nightlyReleases = await getNightlyReleases();
+    console.log(`found ${nightlyReleases.length} nightly releases`);
+
+    const currentReleaseId = await getCurrentReleaseId(nightlyReleases);
+    console.log(`current release id: ${currentReleaseId}`);
+
+    for(var j=0; j < nightlyReleases.length; j++) {
+        const release = nightlyReleases[j];
+        if (release.id != currentReleaseId) {
+            console.log(`deleting release ${release.id} ${release.created_at}`);
+            await octokit.repos.deleteRelease({
+                owner,
+                repo,
+                release_id: release.id,
+            });
+        }
+    }
+
+    const tagRef = `tags/${nightlyTagName}`;
+    if (currentReleaseId == 0) {
+        // there's no current release, make sure there's no tag
+        try {
+            console.log(`deleting tag: ${tagRef}`);
+            await octokit.git.deleteRef({
+                owner,
+                repo,
+                ref: tagRef,
+            });
+        } catch {
+            // noop
+        }
+    }
+}
+
+const getNightlyReleases = async () => {
+    const owner = core.getInput("owner") || github.context.repo.owner;
+    const repo = core.getInput("repo") || github.context.repo.repo;
+
+    let page = 1;
+    const pageSize = 30;
+    const foundReleases = new Array();
+    while (true) {
+        const releases = await octokit.repos.listReleases({
+            owner,
+            repo,
+            page: page,
+            per_page: pageSize,
+        });
+
+        for(var i=0; i < releases.data.length; i++) {
+            if (releases.data[i].tag_name.includes("nightly")) {
+                foundReleases.push(releases.data[i]);
+            }
+        }
+
+        if (releases.data.length == pageSize) {
+            page++;
+            continue;
+        }
+
+        return foundReleases;
+    }
+};
+
+// returns the id of the current release which is either the first one without assets or otherwise
+// the first release which has an asset which is not old enough.
+const getCurrentReleaseId = async (releases) => {
+    let currentReleaseWithAssetsId = 0;
+
+    for (var i=0; i < releases.length; i++) {
+        const r = releases[i];
+        if (currentReleaseWithAssetsId == 0 && r.assets.length > 0) {
+            const timeDiff = new Date() - Date.parse(r.assets[0].created_at);
+            if (timeDiff < minNightlyReleaseAge) {
+                currentReleaseWithAssetsId = r.id;
+            }
+        } else if (r.assets.length == 0 ) {
+            return r.id;
+        }
+    }
+
+    return currentReleaseWithAssetsId;
+}
+
+const createNightlyTagIfNeeded = async () => {
+    const owner = core.getInput("owner") || github.context.repo.owner;
+    const repo = core.getInput("repo") || github.context.repo.repo;
+
     try {
-        const current = await octokit.repos.getReleaseByTag({
+        await octokit.git.getRef({
             owner,
             repo,
-            tag: 'nightly',
-        });
-
-        await octokit.repos.deleteRelease({
-            owner,
-            repo,
-            release_id: current.data.id,
-        });
-
-        octokit.git.deleteRef({
-            owner,
-            repo,
-            ref: 'nightly',
+            ref: `tags/${nightlyTagName}`,
         });
     } catch {
-        // noop
+        console.log('creating nightly tag');
+        const repoInfo = await octokit.repos.get({
+            owner,
+            repo,
+        });
+        const mainBranchRef = await octokit.git.getRef({
+            owner,
+            repo,
+            ref: `heads/${repoInfo.data.default_branch}`,
+        });
+        await octokit.git.createRef({
+            owner,
+            repo,
+            ref: `refs/tags/${nightlyTagName}`,
+            sha: mainBranchRef.data.object.sha,
+        });
     }
 }
 
