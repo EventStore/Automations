@@ -17,5 +17,5 @@ inputs:
     description: "Owner of the target repo. By default, current repo owner but mandatory in batch mode"
     required: false
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: "node16"
+  main: "index.js"

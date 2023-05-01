@@ -5,5 +5,5 @@ inputs:
     description: 'Type of version label you want: current supported values [tag]'
     required: false
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: "node16"
+  main: "index.js"

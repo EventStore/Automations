@@ -27,5 +27,5 @@ outputs:
   upload_url:
     description: 'URL used to upload release asset to GitHub'
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: "node16"
+  main: "index.js"
