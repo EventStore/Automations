@@ -104,7 +104,12 @@ const cleanupPreviousNightly = async () => {
     for(var j=0; j < nightlyReleases.length; j++) {
         const release = nightlyReleases[j];
         if (release.id != currentReleaseId) {
-            console.log(`deleting release ${release.id} ${release.created_at}`);
+            let totalDownloads = 0;
+            for (const a in release.assets) {
+                totalDownloads += release.assets[a].download_count;
+            }
+
+            console.log(`deleting release: id:${release.id} published_at:${release.published_at} total_downloads:${totalDownloads}`);
             await octokit.repos.deleteRelease({
                 owner,
                 repo,
@@ -145,8 +150,9 @@ const getNightlyReleases = async () => {
         });
 
         for(var i=0; i < releases.data.length; i++) {
-            if (releases.data[i].tag_name.includes("nightly")) {
-                foundReleases.push(releases.data[i]);
+            const r = releases.data[i];
+            if (r.tag_name.includes("nightly")) {
+                foundReleases.push(r);
             }
         }
 
@@ -166,6 +172,11 @@ const getCurrentReleaseId = async (releases) => {
 
     for (var i=0; i < releases.length; i++) {
         const r = releases[i];
+        // current release can't be a draft.
+        if (r.draft == true) {
+            continue;
+        }
+
         if (currentReleaseWithAssetsId == 0 && r.assets.length > 0) {
             const timeDiff = new Date() - Date.parse(r.assets[0].created_at);
             if (timeDiff < minNightlyReleaseAge) {
