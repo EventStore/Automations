@@ -14,5 +14,5 @@ outputs:
   skipped:
     description: 'If true, means the pull request linting process has been skipped (thus no changelog update is needed)'
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: "node16"
+  main: "index.js"
