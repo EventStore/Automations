@@ -118,15 +118,36 @@ const cleanupPreviousNightly = async () => {
         }
     }
 
-    const tagRef = `tags/${nightlyTagName}`;
+    const nightlyTagRef = `tags/${nightlyTagName}`;
     if (currentReleaseId == 0) {
-        // there's no current release, make sure there's no tag
+        // there's no current release, it's safe to delete nightly tag if needed
         try {
-            console.log(`deleting tag: ${tagRef}`);
+            const repoInfo = await octokit.repos.get({
+                owner,
+                repo,
+            });
+            const mainBranchInfo = await octokit.git.getRef({
+                owner,
+                repo,
+                ref: `heads/${repoInfo.data.default_branch}`,
+            });
+            const nightlyTagInfo = await octokit.git.getRef({
+                owner,
+                repo,
+                ref: nightlyTagRef,
+            });
+
+            if (nightlyTagInfo.data.object.sha == mainBranchInfo.data.object.sha) {
+                console.log(`no new commits since previous nightly-build, skip re-creating tag!`);
+                return;
+            }
+
+            console.log(`deleting tag: ${nightlyTagRef} (${nightlyTagInfo.data.object.sha} / ${mainBranchInfo.data.object.sha})`);
+
             await octokit.git.deleteRef({
                 owner,
                 repo,
-                ref: tagRef,
+                ref: nightlyTagRef,
             });
         } catch {
             // noop
@@ -166,7 +187,7 @@ const getNightlyReleases = async () => {
 };
 
 // returns the id of the current release which is either the first one without assets or otherwise
-// the first release which has an asset which is not old enough.
+// the first release which has an asset which is part of current nightly release.
 const getCurrentReleaseId = async (releases) => {
     let currentReleaseWithAssetsId = 0;
 
