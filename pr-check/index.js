@@ -141,9 +141,11 @@ async function run() {
     if (githubToken) core.debug("github_token is set");
 
     if (payload.hasOwnProperty('pull_request')) {
-      if(!payload.pull_request.body)
-        core.setFailed("Pull request description is empty");
-      
+      if(!payload.pull_request.body) {
+        core.setFailed("Pull request description is empty.");
+        return;
+      }
+
       const description = payload.pull_request.body.replace(/\r\n/g, '\n');
       const env = {
         owner: payload.repository.owner.login,
