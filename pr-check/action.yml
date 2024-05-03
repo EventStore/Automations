@@ -10,6 +10,9 @@ inputs:
   exclude:
     description: 'If set, will not check pull request that edit files under specified path'
     required: false
+  github_token:
+    description: 'Token to use for GitHub API requests'
+    required: false
 outputs:
   skipped:
     description: 'If true, means the pull request linting process has been skipped (thus no changelog update is needed)'

@@ -137,6 +137,8 @@ async function run() {
     core.debug("Parse exclude parameter…");
     const excludeList = parseStringOrStringList(excludeParams);
     core.debug("Complete");
+    const githubToken = core.getInput("github_token") || null;
+    if (githubToken) core.debug("github_token is set");
 
     if (payload.hasOwnProperty('pull_request')) {
       const description = payload.pull_request.body.replace(/\r\n/g, '\n');
@@ -144,7 +146,7 @@ async function run() {
         owner: payload.repository.owner.login,
         repo: payload.repository.name,
         pull_number: payload.pull_request.number,
-        octokit: new Octokit(),
+        octokit: new Octokit({ auth: githubToken }),
       };
 
       const paths = await fetchChangedFiles(env);
@@ -160,7 +162,7 @@ async function run() {
       core.setFailed(`pr-check only supports pull_request objects.`);
     }
   } catch (error) {
-    core.setFailed(`An unexpected error happened: ${error.message}`);
+    core.setFailed(`An unexpected error happened: ${error.message} ${error.stack}`);
   }
 }
 
