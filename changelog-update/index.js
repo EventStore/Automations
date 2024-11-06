@@ -4,15 +4,19 @@
 //
 // This Github action will update the changelog automatically and push the changes on
 // the repository afterward.
-const core = require('@actions/core');
-const github = require('@actions/github');
-const { Base64 } = require('js-base64');
+import * as core from '@actions/core';
+import * as github from '@actions/github';
+import { Base64 } from 'js-base64';
 
 // We use octokit directly because the version that @actions/github is too old.
-const { Octokit } = require('@octokit/rest');
+import { Octokit } from '@octokit/rest';
 const auth = core.getInput('github-token');
 const octokit = new Octokit({
-  auth
+  auth: auth,
+  log: {
+    warn: console.warn,
+    error: console.error
+  }
 });
 
 const onSpotMode = 'on-spot';
@@ -212,7 +216,7 @@ const fetchPullRequestsOfTheDay = async (owner, repo, offset) => {
 // that file.
 const getCurrentChangelogText = async (owner, repo) => {
   try {
-    const response = await octokit.repos.getContents({
+    const response = await octokit.repos.getContent({
       owner,
       repo,
       path: "CHANGELOG.md",
@@ -256,6 +260,9 @@ async function run() {
     const skipped = core.getInput('skipped') || 'false';
     const owner = core.getInput("owner") || payload.repository.owner.login;
     const repo = core.getInput("repo") || payload.repository.name;
+    const startDate = core.getInput("start-date") || "";
+    const endDate = core.getInput("end-date") || "";
+    const dryRun = core.getInput("dry-run") || false;
 
     core.debug(`Get ${owner}/${repo} default branch...`);
     const default_branch = (await octokit.repos.get({
@@ -313,16 +320,51 @@ async function run() {
 
       base_tree = response.data.tree.sha;
     } else if (mode === batchMode) {
-      let offset = new Date();
-      offset.setUTCDate(offset.getUTCDate() - 1);
+      let pulls = [];
+      core.debug("Running in batch mode");
+      if (startDate === "") {
+        core.debug("startDate was not provided. Only dealing with pull requests from the day before today");
+        let offset = new Date();
+        offset.setUTCDate(offset.getUTCDate() - 1);
 
-      core.debug("Before fetchPullRequestsOfTheDay…");
-      let pulls = await fetchPullRequestsOfTheDay(owner, repo, offset);
-      core.debug("Completed");
+        core.debug("Before fetchPullRequestsOfTheDay…");
+        pulls = await fetchPullRequestsOfTheDay(owner, repo, offset);
+        core.debug("Completed");
+      } else {
+        core.debug("startDate was provided. Parsing start and end dates");
+        let start = new Date(startDate);
+        if (isNaN(start.getTime())) {
+          core.setFailed("startDate input is an invalid date. Please provide the startDate in the format YYYY-MM-dd");
+        }
+        core.debug(`start date set to ${start}`);
+
+        let end = new Date();
+        if (endDate !== "") {
+          end = new Date(endDate);
+          if (isNaN(end.getTime())) {
+            core.setFailed("endDate input is an invalid date. Please provide the endDate in the format YYYY-MM-dd");
+          }
+        }
+        core.debug(`end date set to ${end}`);
+        core.info(`Creating changelog for pull requests from ${start.getUTCFullYear()}-${start.getUTCMonth()+1}-${start.getUTCDate()} to ${end.getUTCFullYear()}-${end.getUTCMonth()+1}-${end.getUTCDate()}`);
+        let offset = end;
+        // Gather the pull requests day by day until we reach the start date
+        while (true) {
+          core.debug(`Before fetchPullRequestsOfTheDay. Offset is ${offset.getUTCFullYear()}-${offset.getUTCMonth()+1}-${offset.getUTCDate()}`);
+          pulls = pulls.concat(await fetchPullRequestsOfTheDay(owner, repo, offset));
+          core.debug("Completed");
+          offset.setUTCDate(offset.getUTCDate() - 1);
+          if (offset < start && !belongsToSameDay(start, offset)) {
+            core.debug("Finished collecting pull requests for the time period");
+            break;
+          }
+        }
+      }
+
       core.debug("Gathering pull requests…");
       let input = pulls.flatMap(pull => {
         core.debug(`>>>Dealing with #${pull.number}`);
-        core.debug(`${JSON.stringify(pull, null, 4)}`);
+        // core.debug(`${JSON.stringify(pull, null, 4)}`);
         // Because it is possible for a pull request check to be skipped by `pr-check` action (for example, if the PR
         // doesn’t change anything under `src` directory), we got to filter those skipped pull requests out in batch
         // mode.
@@ -369,6 +411,15 @@ async function run() {
       core.setFailed(`Unsupported mode: ${mode}`);
     }
 
+    if (dryRun) {
+      core.info("DryRun was specified. The changelog will not be updated.");
+      core.info(`Changelog update would be made with base tree: '${base_tree}', parent commit: '${commit_sha}', branch: '${default_branch}'`);
+      core.info("Changelog update contents: ");
+      core.info(content);
+      core.info("Exiting...");
+      return;
+    }
+
     core.debug("Create a new git tree…");
     const treeResponse = await octokit.git.createTree({
       owner,
@@ -410,5 +461,6 @@ async function run() {
     core.setFailed(`An unexpected error happened: ${JSON.stringify(error, undefined, 4)}`);
   }
 }
+
 
 run();

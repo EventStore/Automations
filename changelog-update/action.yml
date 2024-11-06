@@ -14,8 +14,20 @@ inputs:
     description: 'Target repo. By default, current repo but mandatory in batch mode'
     required: false
   owner:
-    description: "Owner of the target repo. By default, current repo owner but mandatory in batch mode"
+    description: 'Owner of the target repo. By default, current repo owner but mandatory in batch mode'
     required: false
+  start-date:
+    description: 'The date (YYYY-MM-dd) to start collecting changelog updates from. If empty, updates will only be applied from the day before today. Only has an effect in batch mode, and does not check for duplicate changelog entries.'
+    required: false
+    default: ''
+  end-date:
+    description: 'The date (YYYY-MM-dd) to collect changelog updates to. Only has an effect when "start-date" is specified.'
+    required: false
+    default: ''
+  dry-run:
+    description: 'Collect and print the potential changelog update, but do not apply the commit or open a PR.'
+    required: false
+    default: false
 runs:
-  using: "node16"
-  main: "index.js"
+  using: 'node20'
+  main: 'index.js'
