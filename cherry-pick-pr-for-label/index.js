@@ -20,9 +20,15 @@ function getTargetBranchesFromLabels(pullRequest) {
     .filter((label) => !!label);
 }
 
+function getLabelsToReapply(pullRequest) {
+  return pullRequest.labels
+    .filter((label) => !label.name.startsWith(CHERRY_PICK_LABEL))
+    .map((label) => label.name);
+}
+
 async function createPullRequestWithCherryPick(
   octokit,
-  { repo, owner, sourceOwner, targetBranch, pullRequest, actor, actionRunId }
+  { repo, owner, sourceOwner, targetBranch, pullRequest, actor, actionRunId, labelsToReapply }
 ) {
   try {
     const targetSha = await getLastCommitInBranch(octokit, {
@@ -65,6 +71,7 @@ async function createPullRequestWithCherryPick(
       branchName: newBranchName,
       base: targetBranch,
       body,
+      labels: labelsToReapply
     });
 
     await commentOnPR(octokit, {
@@ -116,6 +123,7 @@ async function run() {
     } = pullRequest;
 
     const targetBranches = getTargetBranchesFromLabels(pullRequest);
+    const labelsToReapply = getLabelsToReapply(pullRequest);
 
     if (targetBranches.length === 0) {
       console.log(
@@ -140,6 +148,7 @@ async function run() {
         pullRequest,
         actor,
         actionRunId,
+        labelsToReapply,
       });
 
       if (!isCreated) {
